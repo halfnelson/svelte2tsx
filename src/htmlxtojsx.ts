@@ -406,11 +406,12 @@ export function convertHtmlxToJsx(str: MagicString, ast: Node, onWalk: (node: No
     // {() => {let _$$p = (somePromise);
     const handleAwait = (awaitBlock: Node) => {
         str.overwrite(awaitBlock.start, awaitBlock.expression.start, "{() => {let _$$p = (");
-        str.prependLeft(awaitBlock.expression.end, ");");
+        str.prependLeft(awaitBlock.expression.end, ")");
         // then value } | {:then value} ->
         // _$$p.then((value) => {<>
         let thenStart: number;
         let thenEnd: number;
+        let needSemi = false;
         if (!awaitBlock.pending.skip) {
             //thenBlock seems to include the {:then} tag
             thenStart = awaitBlock.then.start;
@@ -419,14 +420,16 @@ export function convertHtmlxToJsx(str: MagicString, ast: Node, onWalk: (node: No
             // add the start tag too
             let awaitEnd = htmlx.indexOf("}", awaitBlock.expression.end);
             str.remove(awaitEnd, awaitEnd + 1);
-            str.appendRight(awaitEnd, " <>");
+            str.appendRight(awaitEnd, " ;<>");
         }
         else {
             thenEnd = htmlx.lastIndexOf("}", awaitBlock.then.start) + 1;
             thenStart = htmlx.indexOf("then", awaitBlock.expression.end);
+            needSemi = true;
         }
+        const prepend = needSemi ? ';' : '';
         // console.log("overwriting",thenStart, thenEnd);
-        str.overwrite(thenStart, thenEnd, "_$$p.then((" + awaitBlock.value + ") => {<>");
+        str.overwrite(thenStart, thenEnd, prepend + "_$$p.then((" + awaitBlock.value + ") => {<>");
         //{:catch error} ->
         //</>}).catch((error) => {<>
         if (!awaitBlock.catch.skip) {
