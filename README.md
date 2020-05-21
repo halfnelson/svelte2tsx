@@ -1,3 +1,6 @@
+# We have moved
+
+This code has a new home in the svelte language tools monorepo https://github.com/sveltejs/language-tools/tree/master/packages
 
 # svelte2tsx
 
